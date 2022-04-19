@@ -4,5 +4,5 @@ build: # build panhan binary
 	--nofollow-import-to=toml \
 	--prefer-source-code \
 	--onefile \
-	-o dist/panhan \
 	src/panhan/main.py
+	mv main.bin panhan.bin
