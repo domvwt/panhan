@@ -5,9 +5,15 @@ presets:
             author: Dominic Thorn
         cli_args:
             standalone: true
+            data_dir: null
 
     journal:
         output_format: html
+    cli_args:
+        citeproc: true
+        toc: true
+
+    blog:
+        output_format: html
 
 pandoc_path: null
-data_dir: null
