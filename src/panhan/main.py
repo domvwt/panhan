@@ -99,8 +99,7 @@ def assure_path(path_arg: str) -> Path | None:
         path_obj = Path(path_arg)
         if path_obj.is_file():
             return path_obj
-        else:
-            raise FileNotFoundError(path_arg)
+        raise FileNotFoundError(path_arg)
     return None
 
 
@@ -213,7 +212,7 @@ def process_source(source_path: Path, panhan_config: PanhanConfig) -> None:
         )
         pypandoc_kwargs = document_config.to_pypandoc_kwargs(panhan_config)
         output_dest = pypandoc_kwargs.get("outputfile") or "stdout"
-        logger.info(f"Writing document to: {output_dest}")
+        logger.info("Writing document to: %s", output_dest)
         output = pypandoc.convert_file(str(source_path), **pypandoc_kwargs)
         if output:
             logger.info("<PANHAN OUTPUT START>")
@@ -244,7 +243,7 @@ def main(
     # Load Panhan YAML.
     panhan_path = assure_path(panhan_yaml) or find_panhan_yaml()
     panhan_config = load_panhan_config(panhan_path)
-    logger.info(f"Loaded panhan config: {panhan_path}")
+    logger.info("Loaded panhan config: %s", panhan_path)
 
     # Update application config.
     update_app_config(panhan_config)
@@ -252,7 +251,7 @@ def main(
     # Process each source file.
     source_path_gen = (Path(src) for src in SOURCE)
     for source_path in source_path_gen:
-        logger.info(f"Processing source: {source_path}")
+        logger.info("Processing source: %s", source_path)
         process_source(source_path=source_path, panhan_config=panhan_config)
     logger.info("Process completed.")
 
@@ -272,7 +271,9 @@ def cli() -> None:
         print_panhan_yaml_template()
         return
 
-    args_dict = {k: v for k, v in vars(args).items() if k in inspect.signature(main).parameters}
+    args_dict = {
+        k: v for k, v in vars(args).items() if k in inspect.signature(main).parameters
+    }
     main(**args_dict)
 
 

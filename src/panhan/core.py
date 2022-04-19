@@ -1,14 +1,9 @@
 import dataclasses as dc
-import sys
 from pathlib import Path
 from typing import Any
 
-from panhan.logger import logdec, logger
+from panhan.logger import logdec
 
-# TODO
-# * Make panhan frontmatter a list of documentconfigs
-# * Do away with 'use_preset' key
-# * Inherit from presets using 'use_preset'
 
 @dc.dataclass
 class DocumentConfig:
@@ -102,7 +97,9 @@ class PanhanFrontmatter:
     document_config_list: list[DocumentConfig]
 
     def __init__(self, document_configs: list[dict[str, Any]]) -> None:
-        self.document_config_list = [DocumentConfig.from_dict(config) for config in document_configs]
+        self.document_config_list = [
+            DocumentConfig.from_dict(config) for config in document_configs
+        ]
 
 
 @dc.dataclass
@@ -134,7 +131,7 @@ class PanhanConfig:
                 parent = self.get_preset(doc_config.use_preset)
                 doc_config = doc_config.combine(parent)
             return doc_config
-        elif default:
+        if default:
             return default
 
         available_presets = "\n  ".join(
