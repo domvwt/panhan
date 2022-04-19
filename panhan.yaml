@@ -1,0 +1,13 @@
+presets:
+    default:
+        output_format: html
+        variables:
+            author: Dominic Thorn
+        cli_args:
+            standalone: true
+
+    journal:
+        output_format: html
+
+pandoc_path: null
+data_dir: null

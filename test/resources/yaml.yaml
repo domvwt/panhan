@@ -1,0 +1,28 @@
+presets:
+  default:
+    output_format: html
+    variables:
+      author: { getuser() }
+    cli_args:
+      standalone: true
+
+  preset_one:
+    output_format: html
+    output_file: output.html
+    variables:
+      arg1: value
+      arg2: value
+    cli_args:
+      arg1: value
+      arg2: value
+    filters:
+      - filter1
+      - filter2
+
+  preset_two:
+    use_preset: preset_one
+    filters:
+      - filter3
+
+pandoc_path: null
+data_dir: null
