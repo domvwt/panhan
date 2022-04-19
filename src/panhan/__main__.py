@@ -1,4 +1,4 @@
-from panhan.main import cli
+from panhan.cli import cli
 
 if __name__ == "__main__":
     cli()

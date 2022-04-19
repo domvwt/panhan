@@ -1,9 +1,5 @@
-import inspect
 import os
-import sys
-from argparse import ArgumentParser
 from getpass import getuser
-from logging import DEBUG, INFO
 from pathlib import Path
 from textwrap import dedent
 from typing import Iterable
@@ -12,39 +8,14 @@ import frontmatter
 import pypandoc
 import yaml
 
-from panhan import __version__
-from panhan.core import DocumentConfig, PanhanConfig, PanhanFrontmatter
 from panhan.logger import logdec, logger
+from panhan.models import DocumentConfig, PanhanConfig, PanhanFrontmatter
 
-# *** TODO ***
-# * Output multiple formats / presets
 
-PROG = "panhan"
 APP_CONFIG_FILENAME = "panhan.yaml"
 
 
-def get_parser() -> ArgumentParser:
-    """Get CLI argument parser.
-
-    Returns:
-        ArgumentParser: argument parser.
-    """
-    parser = ArgumentParser(prog=PROG)
-    parser.add_argument("SOURCE", nargs="*", help="markdown source file(s)")
-    parser.add_argument("--panhan-yaml", help="path to panhan.yaml")
-    parser.add_argument(
-        "--print-yaml-template",
-        action="store_true",
-        help="print panhan config template",
-    )
-    parser.add_argument(
-        "--verbose", action="store_true", help="explain what is being done"
-    )
-    parser.add_argument("--debug", action="store_true", help="print debug output")
-    parser.add_argument("--version", action="version", version=__version__)
-    return parser
-
-
+@logdec
 def print_panhan_yaml_template() -> None:
     yaml_template = f"""\
     #{Path.home()}/.config/{APP_CONFIG_FILENAME}
@@ -220,22 +191,14 @@ def process_source(source_path: Path, panhan_config: PanhanConfig) -> None:
             logger.info("<PANHAN OUTPUT END>")
 
 
-def main(
-    SOURCE: str | Iterable[str], panhan_yaml: str, verbose: bool, debug: bool
-) -> None:
+@logdec
+def process_source_files(SOURCE: str | Iterable[str], panhan_yaml: str) -> None:
     """Read and interpret source file(s) with panhan config, output with pypandoc.
 
     Args:
         source (str | Iterable[str]): path(s) to source file(s).
         panhan_yaml (str): path to `panhan.yaml` - will check default locations if empty.
-        verbose (bool): if True, print progress to stdout.
-        debug (bool): if True, print debug info to stdout.
     """
-    if debug:
-        logger.setLevel(DEBUG)
-    elif verbose:
-        logger.setLevel(INFO)
-
     # Ensure source is iterable.
     if isinstance(SOURCE, str):
         SOURCE = (SOURCE,)
@@ -254,28 +217,3 @@ def main(
         logger.info("Processing source: %s", source_path)
         process_source(source_path=source_path, panhan_config=panhan_config)
     logger.info("Process completed.")
-
-
-def cli() -> None:
-    """Launch command line interface."""
-    parser = get_parser()
-    args = parser.parse_args()
-
-    # Print usage if no arguments passed.
-    if len(sys.argv) < 2:
-        parser.print_help()
-        return
-
-    # Print YAML template and quit.
-    if args.print_yaml_template:
-        print_panhan_yaml_template()
-        return
-
-    args_dict = {
-        k: v for k, v in vars(args).items() if k in inspect.signature(main).parameters
-    }
-    main(**args_dict)
-
-
-if __name__ == "__main__":
-    cli()
