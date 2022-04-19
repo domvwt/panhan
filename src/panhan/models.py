@@ -1,4 +1,5 @@
 import dataclasses as dc
+import inspect
 from pathlib import Path
 from typing import Any
 
@@ -55,17 +56,23 @@ class DocumentConfig:
         Returns:
             DocumentConfig: document config.
         """
-        valid_keys = dc.asdict(cls()).keys()
-        return DocumentConfig(
-            **{key: value for key, value in dict_.items() if key in valid_keys}
-        )
+        valid_keys = [
+            key
+            for key in inspect.signature(cls.__init__).parameters.keys()
+            if key != "self"
+        ]
+        invalid_keys = sorted(set(dict_.keys()).difference(valid_keys))
+        if invalid_keys:
+            msg = f"Unexpected key(s) in document config: {invalid_keys}. Valid keys are: {valid_keys}."
+            raise KeyError(msg)
+        return DocumentConfig(**dict_)
 
     @logdec
-    def to_pypandoc_kwargs(self, panhan_config: "PanhanConfig") -> dict[str, Any]:
+    def to_pypandoc_kwargs(self) -> dict[str, Any]:
         """Translate `DocumentConfig` to dictionary of kwargs for pypandoc.
 
         Args:
-            panhan_config (PanhanConfig): panhan config object.
+            panhan_config (AppConfig): panhan config object.
 
         Returns:
             dict[str, Any]: translated kwarg dict.
@@ -75,7 +82,6 @@ class DocumentConfig:
             for arg in [
                 *cli_args_dict_to_list(self.cli_args),
                 *variables_dict_to_list(self.variables),
-                *panhan_config_to_arg_list(panhan_config),
             ]
             if arg
         ]
@@ -103,12 +109,11 @@ class PanhanFrontmatter:
 
 
 @dc.dataclass
-class PanhanConfig:
+class AppConfig:
     """Panhan application config data."""
 
     presets: dict[str, Any]
     pandoc_path: str | None
-    data_dir: str | None
 
     @logdec
     def get_preset(
@@ -134,15 +139,11 @@ class PanhanConfig:
         if default:
             return default
 
-        available_presets = "\n  ".join(
-            (f"'{preset}'" for preset in self.presets.keys())
+        available_presets = list(self.presets.keys())
+        msg = (
+            f"Preset not found: '{preset_name}'. Available presets: {available_presets}"
         )
-        error_message = str(
-            f"Preset name not found: '{preset_name}'\n"
-            f"Available presets:\n  {available_presets}\n"
-            "Aborting process!"
-        )
-        raise KeyError(error_message)
+        raise KeyError(msg)
 
     @logdec
     def get_default_preset(self) -> DocumentConfig:
@@ -193,6 +194,21 @@ def format_flag(flag: str) -> str:
     return f"--{flag}" if len(flag) > 1 else f"-{flag}"
 
 
+def format_value(value: Any) -> Any:
+    """Add quotes around value if it contains spaces.
+
+    Args:
+        value (Any): command line value.
+
+    Returns:
+        Any: modified value.
+    """
+    if isinstance(value, str):
+        value = value.strip()
+        return f'"{value}"' if " " in value else value
+    return value
+
+
 @logdec
 def cli_args_dict_to_list(cli_args_dict: dict[str, Any]) -> list[str]:
     """Transform dict of CLI args to list for pypandoc.
@@ -214,26 +230,10 @@ def cli_args_dict_to_list(cli_args_dict: dict[str, Any]) -> list[str]:
     }
     delimiter = ARG_DELIMITER
     cli_args_list = delimiter.join(
-        f'{format_flag(flag)}{delimiter}"{value}"'
+        f"{format_flag(flag)}{delimiter}{format_value(value)}"
         if not isinstance(value, bool)
         else f"{format_flag(flag)}"
         for flag, value in cli_args_filtered.items()
         if value is not False
     ).split(delimiter)
     return cli_args_list
-
-
-@logdec
-def panhan_config_to_arg_list(panhan_config: PanhanConfig) -> list[str]:
-    """Extract CLI args from `panhan_config` for pypandoc.
-
-    Args:
-        panhan_config (PanhanConfig): panhan config object.
-
-    Returns:
-        list[str]: CLI args as list of strings,
-    """
-    arg_list = []
-    if panhan_config.data_dir:
-        arg_list += ["--data-dir", panhan_config.data_dir]
-    return arg_list

@@ -1,7 +1,7 @@
 import inspect
 import sys
 from argparse import ArgumentParser
-from logging import INFO, DEBUG
+from logging import DEBUG, INFO
 
 from panhan import __version__, helpers
 from panhan.logger import logger

@@ -1,7 +1,7 @@
 import functools as ft
 import inspect
 from logging import ERROR, Formatter, Logger, StreamHandler
-from typing import Callable
+from typing import Any, Callable
 
 
 def get_logger() -> Logger:
@@ -25,7 +25,7 @@ def get_logger() -> Logger:
 logger = get_logger()
 
 
-def logdec(func: Callable) -> Callable:
+def logdec(func: Callable[..., Any]) -> Callable[..., Any]:
     """Decorator for logging function calls and arguments.
 
     Args:

@@ -2,15 +2,14 @@ import os
 from getpass import getuser
 from pathlib import Path
 from textwrap import dedent
-from typing import Iterable
+from typing import Any, Iterable
 
 import frontmatter
 import pypandoc
 import yaml
 
 from panhan.logger import logdec, logger
-from panhan.models import DocumentConfig, PanhanConfig, PanhanFrontmatter
-
+from panhan.models import AppConfig, DocumentConfig, PanhanFrontmatter
 
 APP_CONFIG_FILENAME = "panhan.yaml"
 
@@ -46,7 +45,6 @@ def print_panhan_yaml_template() -> None:
                 - filter3
 
     pandoc_path: null
-    data_dir: null
     """
     print(dedent(yaml_template))
 
@@ -98,11 +96,11 @@ def find_panhan_yaml() -> Path:
 
 
 @logdec
-def update_app_config(panhan_config: PanhanConfig) -> None:
+def update_app_config(panhan_config: AppConfig) -> None:
     """Update application state with settings in `panhan_config`.
 
     Args:
-        panhan_config (PanhanConfig): panhan config object.
+        panhan_config (AppConfig): panhan config object.
     """
     # If `pandoc_path` is defined, update environment variable for pypandoc.
     if panhan_config.pandoc_path:
@@ -124,29 +122,29 @@ def load_panhan_frontmatter(source_path: Path) -> PanhanFrontmatter:
 
 
 @logdec
-def load_panhan_config(panhan_path: Path) -> PanhanConfig:
+def load_panhan_config(panhan_path: Path) -> AppConfig:
     """Read panhan config `panhan_path` and return config object.
 
     Args:
         panhan_path (Path): path to panhan.yaml.
 
     Returns:
-        PanhanConfig: panhan config object.
+        AppConfig: panhan config object.
     """
     yaml_str = panhan_path.read_text()
     panhan_dict = yaml.safe_load(yaml_str)
-    return PanhanConfig(**panhan_dict)
+    return AppConfig(**panhan_dict)
 
 
 @logdec
 def resolve_config(
-    document_config: DocumentConfig, panhan_config: PanhanConfig
+    document_config: DocumentConfig, panhan_config: AppConfig
 ) -> DocumentConfig:
     """Determine correct document config from source file and panhan config.
 
     Args:
         panhan_frontmatter (DocumentConfig): document config from source file.
-        panhan_config (PanhanConfig): panhan settings from panhan.yaml.
+        panhan_config (AppConfig): panhan settings from panhan.yaml.
 
     Returns:
         DocumentConfig: resolved output document config.
@@ -169,12 +167,17 @@ def resolve_config(
 
 
 @logdec
-def process_source(source_path: Path, panhan_config: PanhanConfig) -> None:
+def convert_file(source_path: Path, **pypandoc_kwargs: dict[str, Any]) -> None:
+    pypandoc.convert_file(str(source_path), **pypandoc_kwargs)
+
+
+@logdec
+def process_source(source_path: Path, panhan_config: AppConfig) -> None:
     """Read markdown source at `source_path`, resolve config, write output with pypandoc.
 
     Args:
         source_path (Path): path to markdown source file.
-        panhan_config (PanhanConfig): panhan config object.
+        panhan_config (AppConfig): panhan config object.
     """
     panhan_frontmatter = load_panhan_frontmatter(source_path=source_path)
     for document_config in panhan_frontmatter.document_config_list:
@@ -184,7 +187,7 @@ def process_source(source_path: Path, panhan_config: PanhanConfig) -> None:
         pypandoc_kwargs = document_config.to_pypandoc_kwargs(panhan_config)
         output_dest = pypandoc_kwargs.get("outputfile") or "stdout"
         logger.info("Writing document to: %s", output_dest)
-        output = pypandoc.convert_file(str(source_path), **pypandoc_kwargs)
+        output = convert_file(str(source_path), **pypandoc_kwargs)
         if output:
             logger.info("<PANHAN OUTPUT START>")
             print(output)
