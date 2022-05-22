@@ -3,15 +3,15 @@ presets:
         output_format: html
         variables:
             author: Dominic Thorn
-        cli_args:
+        pandoc_args:
             standalone: true
             data_dir: null
 
     journal:
         output_format: html
-    cli_args:
-        citeproc: true
-        toc: true
+        pandoc_args:
+            citeproc: true
+            toc: true
 
     blog:
         output_format: html

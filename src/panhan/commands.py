@@ -23,7 +23,7 @@ def print_panhan_yaml_template() -> None:
             output_format: html
             variables:
                 author: {getuser()}
-            cli_args:
+            pandoc_args:
                 standalone: true
 
         preset_one:
@@ -32,7 +32,7 @@ def print_panhan_yaml_template() -> None:
             variables:
                 arg1: value
                 arg2: value
-            cli_args:
+            pandoc_args:
                 arg1: value
                 arg2: value
             filters:

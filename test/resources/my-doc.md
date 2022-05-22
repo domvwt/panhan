@@ -6,9 +6,8 @@ panhan:
   output_file: test.html
   variables:
     author: Dominic Thorn <dominic.thorn@gmail.com>
-  cli_args:
+  pandoc_args:
     toc: false
-  
 -
   use_preset: journal
   variables:
@@ -16,7 +15,7 @@ panhan:
 -
   output_format: pdf
   output_file: report.pdf
-  cli_args:
+  pandoc_args:
     pdf_engine: weasyprint
 ---
 
@@ -35,6 +34,6 @@ use_preset: str | None = None
 output_format: str | None = None
 output_file: Path | None = None
 variables: dict[str, Any] = dc.field(default_factory=dict)
-cli_args: dict[str, Any] = dc.field(default_factory=dict)
+pandoc_args: dict[str, Any] = dc.field(default_factory=dict)
 filters: dict[str, bool] = dc.field(default_factory=dict)
 ```

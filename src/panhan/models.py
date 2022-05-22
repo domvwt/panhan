@@ -2,6 +2,7 @@ import dataclasses as dc
 import inspect
 from pathlib import Path
 from typing import Any
+from typing_extensions import Self
 
 from panhan.logger import logdec
 
@@ -14,11 +15,11 @@ class DocumentConfig:
     output_format: str | None = None
     output_file: Path | None = None
     variables: dict[str, Any] = dc.field(default_factory=dict)
-    cli_args: dict[str, Any] = dc.field(default_factory=dict)
+    pandoc_args: dict[str, Any] = dc.field(default_factory=dict)
     filters: dict[str, bool] = dc.field(default_factory=dict)
 
     @logdec
-    def combine(self, other: "DocumentConfig") -> "DocumentConfig":
+    def combine(self, other: "DocumentConfig") -> Self:
         """Combine config values of `self` with `other`.
 
         If config keys are present in both objects, `self` will take precedence.
@@ -33,7 +34,7 @@ class DocumentConfig:
         output_format = self.output_format or other.output_format
         output_file = self.output_file or other.output_file
         variables = {**other.variables, **self.variables}
-        cli_args = {**other.cli_args, **self.cli_args}
+        pandoc_args = {**other.pandoc_args, **self.pandoc_args}
         filters = {**other.filters, **self.filters}
 
         return DocumentConfig(
@@ -41,13 +42,13 @@ class DocumentConfig:
             output_format=output_format,
             output_file=output_file,
             variables=variables,
-            cli_args=cli_args,
+            pandoc_args=pandoc_args,
             filters=filters,
         )
 
     @classmethod
     @logdec
-    def from_dict(cls, dict_: dict[str, Any]) -> "DocumentConfig":
+    def from_dict(cls, dict_: dict[str, Any]) -> Self:
         """Create `DocumentConfig` from dictionary.
 
         Args:
@@ -80,7 +81,7 @@ class DocumentConfig:
         extra_args = [
             arg
             for arg in [
-                *cli_args_dict_to_list(self.cli_args),
+                *pandoc_args_dict_to_list(self.pandoc_args),
                 *variables_dict_to_list(self.variables),
             ]
             if arg
@@ -210,30 +211,30 @@ def format_value(value: Any) -> Any:
 
 
 @logdec
-def cli_args_dict_to_list(cli_args_dict: dict[str, Any]) -> list[str]:
+def pandoc_args_dict_to_list(pandoc_args_dict: dict[str, Any]) -> list[str]:
     """Transform dict of CLI args to list for pypandoc.
 
-    `cli_args_dict` should take format `{"arg": <value>}`.
+    `pandoc_args_dict` should take format `{"arg": <value>}`.
 
     If <value> is `True` the arg will be returned with no corresponding value.
     If <value> is `False` the arg will be suppressed.
     All other values will be cast to string.
 
     Args:
-        cli_args_dict (dict[str, Any]): dictionary of CLI args and values.
+        pandoc_args_dict (dict[str, Any]): dictionary of CLI args and values.
 
     Returns:
         list[str]: CLI args as list of strings.
     """
-    cli_args_filtered = {
-        key: value for key, value in cli_args_dict.items() if value is not False
+    pandoc_args_filtered = {
+        key: value for key, value in pandoc_args_dict.items() if value is not False
     }
     delimiter = ARG_DELIMITER
-    cli_args_list = delimiter.join(
+    pandoc_args_list = delimiter.join(
         f"{format_flag(flag)}{delimiter}{format_value(value)}"
         if not isinstance(value, bool)
         else f"{format_flag(flag)}"
-        for flag, value in cli_args_filtered.items()
+        for flag, value in pandoc_args_filtered.items()
         if value is not False
     ).split(delimiter)
-    return cli_args_list
+    return pandoc_args_list

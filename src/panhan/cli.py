@@ -3,7 +3,7 @@ import sys
 from argparse import ArgumentParser
 from logging import DEBUG, INFO
 
-from panhan import __version__, helpers
+from panhan import __version__, commands
 from panhan.logger import logger
 
 
@@ -47,17 +47,17 @@ def cli() -> None:
 
     # Print YAML template and quit.
     if args.print_yaml_template:
-        helpers.print_panhan_yaml_template()
+        commands.print_panhan_yaml_template()
         return
 
     # Select args that should be passed to main.
     args_dict = {
         k: v
         for k, v in vars(args).items()
-        if k in inspect.signature(helpers.process_source_files).parameters
+        if k in inspect.signature(commands.process_source_files).parameters
     }
 
-    helpers.process_source_files(**args_dict)
+    commands.process_source_files(**args_dict)
 
 
 if __name__ == "__main__":
