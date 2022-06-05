@@ -17,7 +17,7 @@ APP_CONFIG_FILENAME = "panhan.yaml"
 @logdec
 def print_panhan_yaml_template() -> None:
     yaml_template = f"""\
-    #{Path.home()}/.config/{APP_CONFIG_FILENAME}
+    #{Path.home()}/.config/panhan/{APP_CONFIG_FILENAME}
     presets:
         default:
             output_format: html
@@ -87,7 +87,7 @@ def find_panhan_yaml() -> Path:
     possible_paths = [
         Path.cwd() / APP_CONFIG_FILENAME,
         Path.home() / APP_CONFIG_FILENAME,
-        Path.home() / ".config" / APP_CONFIG_FILENAME,
+        Path.home() / ".config/panhan" / APP_CONFIG_FILENAME,
     ]
     for path in possible_paths:
         if path.is_file():
@@ -117,7 +117,7 @@ def load_panhan_frontmatter(source_path: Path) -> PanhanFrontmatter:
     Returns:
         PanhanFrontmatter: panhan frontmatter object.
     """
-    panhan_frontmatter = frontmatter.load(source_path).metadata.get("panhan", {})
+    panhan_frontmatter: list[dict[str, Any]] = frontmatter.load(source_path).metadata.get("panhan", {})
     return PanhanFrontmatter(panhan_frontmatter)
 
 
@@ -180,11 +180,12 @@ def process_source(source_path: Path, panhan_config: AppConfig) -> None:
         panhan_config (AppConfig): panhan config object.
     """
     panhan_frontmatter = load_panhan_frontmatter(source_path=source_path)
+    document_config: DocumentConfig
     for document_config in panhan_frontmatter.document_config_list:
         document_config = resolve_config(
             document_config=document_config, panhan_config=panhan_config
         )
-        pypandoc_kwargs = document_config.to_pypandoc_kwargs(panhan_config)
+        pypandoc_kwargs = document_config.to_pypandoc_kwargs()
         output_dest = pypandoc_kwargs.get("outputfile") or "stdout"
         logger.info("Writing document to: %s", output_dest)
         output = convert_file(str(source_path), **pypandoc_kwargs)
