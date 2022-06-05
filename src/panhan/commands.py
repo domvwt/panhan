@@ -12,12 +12,13 @@ from panhan.logger import logdec, logger
 from panhan.models import AppConfig, DocumentConfig, PanhanFrontmatter
 
 APP_CONFIG_FILENAME = "panhan.yaml"
+USER_CONFIG_LOCATION = Path.home() / ".config/panhan/" / APP_CONFIG_FILENAME
 
 
 @logdec
 def print_panhan_yaml_template() -> None:
     yaml_template = f"""\
-    #{Path.home()}/.config/panhan/{APP_CONFIG_FILENAME}
+    #{USER_CONFIG_LOCATION}
     presets:
         default:
             output_format: html
@@ -86,8 +87,8 @@ def find_panhan_yaml() -> Path:
     """
     possible_paths = [
         Path.cwd() / APP_CONFIG_FILENAME,
+        USER_CONFIG_LOCATION,
         Path.home() / APP_CONFIG_FILENAME,
-        Path.home() / ".config/panhan" / APP_CONFIG_FILENAME,
     ]
     for path in possible_paths:
         if path.is_file():
@@ -117,7 +118,9 @@ def load_panhan_frontmatter(source_path: Path) -> PanhanFrontmatter:
     Returns:
         PanhanFrontmatter: panhan frontmatter object.
     """
-    panhan_frontmatter: list[dict[str, Any]] = frontmatter.load(source_path).metadata.get("panhan", {})
+    panhan_frontmatter: list[dict[str, Any]] = frontmatter.load(
+        source_path
+    ).metadata.get("panhan", {})
     return PanhanFrontmatter(panhan_frontmatter)
 
 

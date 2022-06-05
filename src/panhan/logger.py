@@ -39,7 +39,7 @@ def logdec(func: Callable[..., Any]) -> Callable[..., Any]:
     """
 
     @ft.wraps(func)
-    def wrapper(*args, **kwargs):
+    def wrapper(*args, **kwargs) -> Callable[..., Any]:
         module_name = getattr(inspect.getmodule(func), "__name__", "")
         func_name = f"{module_name}.{func.__name__}"
         args_repr = [str(a) for a in args]

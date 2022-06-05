@@ -3,16 +3,20 @@ presets:
         output_format: html
         variables:
             author: Dominic Thorn
+            email: dominic.thorn@gmail.com
         pandoc_args:
             standalone: true
-            data_dir: null
+            # data_dir: null
 
     journal:
-        output_format: html
+        output_format: pdf 
         pandoc_args:
             citeproc: true
+            template: eisvogel
+        variables:
+            titlepage: true
             toc: true
-
+            toc-own-page: true
     blog:
         output_format: html
 

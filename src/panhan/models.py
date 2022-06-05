@@ -2,7 +2,6 @@ import dataclasses as dc
 import inspect
 from pathlib import Path
 from typing import Any
-from typing_extensions import Self
 
 from panhan.logger import logdec
 
@@ -19,7 +18,7 @@ class DocumentConfig:
     filters: dict[str, bool] = dc.field(default_factory=dict)
 
     @logdec
-    def combine(self, other: "DocumentConfig") -> Self:
+    def combine(self, other: "DocumentConfig") -> "DocumentConfig":
         """Combine config values of `self` with `other`.
 
         If config keys are present in both objects, `self` will take precedence.
@@ -48,7 +47,7 @@ class DocumentConfig:
 
     @classmethod
     @logdec
-    def from_dict(cls, dict_: dict[str, Any]) -> Self:
+    def from_dict(cls, dict_: dict[str, Any]) -> "DocumentConfig":
         """Create `DocumentConfig` from dictionary.
 
         Args:
@@ -71,9 +70,6 @@ class DocumentConfig:
     @logdec
     def to_pypandoc_kwargs(self) -> dict[str, Any]:
         """Translate `DocumentConfig` to dictionary of kwargs for pypandoc.
-
-        Args:
-            panhan_config (AppConfig): panhan config object.
 
         Returns:
             dict[str, Any]: translated kwarg dict.
@@ -175,7 +171,7 @@ def variables_dict_to_list(variables_dict: dict[str, Any]) -> list[str]:
     """
     delimiter = ARG_DELIMITER
     variables = delimiter.join(
-        f'-V{delimiter}{key}="{value}"' for key, value in variables_dict.items()
+        f"-V{delimiter}{key}={value}" for key, value in variables_dict.items()
     ).split(delimiter)
     return variables
 

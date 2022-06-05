@@ -8,5 +8,9 @@
 
 Configuration handler for **[Pandoc]** - the universal document converter.
 
+## TODO
+
+- add `panhan new` command to create new document with yaml header containing placeholder panhan vars
+    - output_file: document.pdf
 <!-- Links -->
 [Pandoc]: https://pandoc.org/
