@@ -4,13 +4,13 @@ panhan:
 - 
   use_preset: default
   output_file: test.html
-  variables:
+  metadata:
     author: Dominic Thorn <dominic.thorn@gmail.com>
   pandoc_args:
     toc: false
 -
   use_preset: journal
-  variables:
+  metadata:
     author: Dominic Thorn <dthorn@student.london.ac.uk>
 -
   output_format: pdf
@@ -33,7 +33,7 @@ Use sequence of mappings example from [reference page](https://yaml.org/spec/1.2
 use_preset: str | None = None
 output_format: str | None = None
 output_file: Path | None = None
-variables: dict[str, Any] = dc.field(default_factory=dict)
+metadata: dict[str, Any] = dc.field(default_factory=dict)
 pandoc_args: dict[str, Any] = dc.field(default_factory=dict)
 filters: dict[str, bool] = dc.field(default_factory=dict)
 ```

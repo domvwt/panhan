@@ -1,7 +1,7 @@
 presets:
   default:
     output_format: html
-    variables:
+    metadata:
       author: { getuser() }
     pandoc_args:
       standalone: true
@@ -9,7 +9,7 @@ presets:
   preset_one:
     output_format: html
     output_file: output.html
-    variables:
+    metadata:
       arg1: value
       arg2: value
     pandoc_args:

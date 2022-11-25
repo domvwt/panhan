@@ -1,23 +1,51 @@
 presets:
     default:
         output_format: html
-        variables:
+        metadata:
             author: Dominic Thorn
             email: dominic.thorn@gmail.com
+            urlcolor: NavyBlue
         pandoc_args:
+            from: markdown+pipe_tables+shortcut_reference_links+spaced_reference_links
             standalone: true
-            # data_dir: null
+            #data_dir: null
+
+    markdown:
+        output_format: markdown
 
     journal:
         output_format: pdf 
         pandoc_args:
             citeproc: true
+            # from: https://github.com/citation-style-language/styles/blob/master/apa.csl
+            csl: /home/domvwt/.pandoc/csl/apa.csl
+            number-sections: true
             template: eisvogel
-        variables:
+        metadata:
             titlepage: true
             toc: true
+            lof: true
+            lot: true
             toc-own-page: true
+            reference-section-title: References
+            urlcolor: NavyBlue
+            linkcolor: NavyBlue
+            header-includes:
+                - \usepackage{longtable}\setlength{\LTleft}{1em}
+        filters:
+            abstract-to-meta.lua: true
+            include-files.lua: true
+            pagebreak.lua: true
+            short-captions.lua: true
+            pandoc-fignos: true
+            pandoc-tablenos: true
+
     blog:
         output_format: html
+
+    wordcount:
+        filters: 
+            wordcount.lua: true
+            include-files.lua: false
 
 pandoc_path: null

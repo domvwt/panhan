@@ -6,11 +6,6 @@
 
 </div>
 
-Configuration handler for **[Pandoc]** - the universal document converter.
+**Panhan** is a preset handler for **Pandoc** that allows you to define and use presets for different types of documents.
 
-## TODO
-
-- add `panhan new` command to create new document with yaml header containing placeholder panhan vars
-    - output_file: document.pdf
 <!-- Links -->
-[Pandoc]: https://pandoc.org/

@@ -5,3 +5,5 @@ tox>=3.24.5
 pylint>=2.12.2
 flake8>=4.0.1
 isort>=5.10.1
+nuitka>=0.8.4
+types-YAML

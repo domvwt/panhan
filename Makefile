@@ -29,7 +29,15 @@ BROWSER := python -c "$$BROWSER_PYSCRIPT"
 help:
 	@python -c "$$PRINT_HELP_PYSCRIPT" < $(MAKEFILE_LIST)
 
-build: ## build panhan binary
+.PHONY=clean
+clean: ## clean build artifacts
+	rm -rf build
+	rm -rf *.build
+	rm -rf *.dist
+	rm -rf *.bin
+	rm -rf **/*.egg-info
+
+build: clean ## build panhan binary
 	python -m nuitka \
 	--nofollow-import-to=toml \
 	--prefer-source-code \
@@ -41,3 +49,11 @@ build: ## build panhan binary
 .PHONY=install
 install: ## install panhan in /usr/local/bin
 	sudo ln -sf $$(readlink -e panhan.bin) /usr/local/bin/panhan
+
+.PHONY=cqa
+cqa: ## code quality analysis
+	black src
+	isort src
+	flake8 src
+	mypy src
+	pylint src

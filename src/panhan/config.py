@@ -13,7 +13,7 @@ class DocumentConfig:
     use_preset: str | None = None
     output_format: str | None = None
     output_file: Path | None = None
-    variables: dict[str, Any] = dc.field(default_factory=dict)
+    metadata: dict[str, Any] = dc.field(default_factory=dict)
     pandoc_args: dict[str, Any] = dc.field(default_factory=dict)
     filters: dict[str, bool] = dc.field(default_factory=dict)
 
@@ -24,15 +24,15 @@ class DocumentConfig:
         If config keys are present in both objects, `self` will take precedence.
 
         Args:
-            other (DocumentConfig): another document config object.
+            other: another document config object.
 
         Returns:
-            DocumentConfig: combined document config.
+            combined document config.
         """
         use_preset = self.use_preset or other.use_preset
         output_format = self.output_format or other.output_format
         output_file = self.output_file or other.output_file
-        variables = {**other.variables, **self.variables}
+        metadata = {**other.metadata, **self.metadata}
         pandoc_args = {**other.pandoc_args, **self.pandoc_args}
         filters = {**other.filters, **self.filters}
 
@@ -40,7 +40,7 @@ class DocumentConfig:
             use_preset=use_preset,
             output_format=output_format,
             output_file=output_file,
-            variables=variables,
+            metadata=metadata,
             pandoc_args=pandoc_args,
             filters=filters,
         )
@@ -48,13 +48,13 @@ class DocumentConfig:
     @classmethod
     @logdec
     def from_dict(cls, dict_: dict[str, Any]) -> "DocumentConfig":
-        """Create `DocumentConfig` from dictionary.
+        """Create config from dictionary.
 
         Args:
-            dict_ (dict[str, Any]): input dictionary.
+            dict_: input dictionary.
 
         Returns:
-            DocumentConfig: document config.
+            document config.
         """
         valid_keys = [
             key
@@ -63,31 +63,30 @@ class DocumentConfig:
         ]
         invalid_keys = sorted(set(dict_.keys()).difference(valid_keys))
         if invalid_keys:
-            msg = f"Unexpected key(s) in document config: {invalid_keys}. Valid keys are: {valid_keys}."
+            msg = f"Unexpected key(s) in config: {invalid_keys}. Valid keys are: {valid_keys}."
             raise KeyError(msg)
         return DocumentConfig(**dict_)
 
     @logdec
-    def to_pypandoc_kwargs(self) -> dict[str, Any]:
-        """Translate `DocumentConfig` to dictionary of kwargs for pypandoc.
+    def get_pypandoc_kwargs(self) -> dict[str, Any]:
+        """Get dictionary of kwargs for pypandoc.
 
         Returns:
-            dict[str, Any]: translated kwarg dict.
+            kwarg dict.
         """
         extra_args = [
             arg
-            for arg in [
-                *pandoc_args_dict_to_list(self.pandoc_args),
-                *variables_dict_to_list(self.variables),
-            ]
+            for arg in pandoc_args_dict_to_list(self.pandoc_args)
             if arg
         ]
+
+        filters = pandoc_filter_dict_to_list(self.filters)
 
         pypandoc_kwargs = {
             "to": self.output_format,
             "outputfile": self.output_file,
             "extra_args": extra_args,
-            "filters": self.filters,
+            "filters": filters,
         }
 
         return pypandoc_kwargs
@@ -106,8 +105,8 @@ class PanhanFrontmatter:
 
 
 @dc.dataclass
-class AppConfig:
-    """Panhan application config data."""
+class BaseConfig:
+    """Base config data."""
 
     presets: dict[str, Any]
     pandoc_path: str | None
@@ -118,14 +117,14 @@ class AppConfig:
     ) -> DocumentConfig:
         """Get settings for `preset_name` from user presets.
 
-        If `preset_name` is not found and default is not provided application will error and close.
+        If `preset_name` is not found and default is not provided, the application will error and close.
 
         Args:
-            preset_name (str): name of preset stored in panhan.yaml.
-            default (None | DocumentConfig, optional): returned if `preset_name` not found. Defaults to None.
+            preset_name: name of preset stored in panhan.yaml.
+            default: returned if `preset_name` not found. Defaults to None.
 
         Returns:
-            DocumentConfig: document settings for `preset_name` or `default` if not found.
+            document settings for `preset_name` or `default` if not found.
         """
         if preset_name in self.presets:
             doc_config = DocumentConfig.from_dict(self.presets[preset_name])
@@ -138,7 +137,7 @@ class AppConfig:
 
         available_presets = list(self.presets.keys())
         msg = (
-            f"Preset not found: '{preset_name}'. Available presets: {available_presets}"
+            f"Preset value not found: '{preset_name}'. Available presets: {available_presets}"
         )
         raise KeyError(msg)
 
@@ -146,10 +145,10 @@ class AppConfig:
     def get_default_preset(self) -> DocumentConfig:
         """Get default preset config if defined.
 
-        Returns empty `DocumentConfig` if `default` is not defined.
+        Returns empty config if `default` is not defined.
 
         Returns:
-            DocumentConfig: document config object.
+            document config object.
         """
         return self.get_preset("default", DocumentConfig())
 
@@ -159,33 +158,16 @@ DocumentConfigDict = dict[str, DocumentConfig]
 ARG_DELIMITER = "<delimiter>"
 
 
-@logdec
-def variables_dict_to_list(variables_dict: dict[str, Any]) -> list[str]:
-    """Transform `variables_dict` to list of command line arguments for pypandoc.
-
-    Args:
-        variables_dict (dict[str, Any]): dictionary of pandoc template variable parameters.
-
-    Returns:
-        list[str]: list of strings like ["-V", "variable", "value", ...]
-    """
-    delimiter = ARG_DELIMITER
-    variables = delimiter.join(
-        f"-V{delimiter}{key}={value}" for key, value in variables_dict.items()
-    ).split(delimiter)
-    return variables
-
-
 def format_flag(flag: str) -> str:
     """Prepend correct number of dashes to CLI option `flag`.
 
     Single letter flags have one '-', all others have '--'.
 
     Args:
-        flag (str): command line flag.
+        flag: command line flag.
 
     Returns:
-        str: modified flag.
+        modified flag.
     """
     flag = flag.replace("_", "-")
     return f"--{flag}" if len(flag) > 1 else f"-{flag}"
@@ -195,10 +177,10 @@ def format_value(value: Any) -> Any:
     """Add quotes around value if it contains spaces.
 
     Args:
-        value (Any): command line value.
+        value: command line value.
 
     Returns:
-        Any: modified value.
+        modified value.
     """
     if isinstance(value, str):
         value = value.strip()
@@ -217,10 +199,10 @@ def pandoc_args_dict_to_list(pandoc_args_dict: dict[str, Any]) -> list[str]:
     All other values will be cast to string.
 
     Args:
-        pandoc_args_dict (dict[str, Any]): dictionary of CLI args and values.
+        pandoc_args_dict: dictionary of CLI args and values.
 
     Returns:
-        list[str]: CLI args as list of strings.
+        CLI args as list of strings.
     """
     pandoc_args_filtered = {
         key: value for key, value in pandoc_args_dict.items() if value is not False
@@ -234,3 +216,21 @@ def pandoc_args_dict_to_list(pandoc_args_dict: dict[str, Any]) -> list[str]:
         if value is not False
     ).split(delimiter)
     return pandoc_args_list
+
+
+@logdec
+def pandoc_filter_dict_to_list(pandoc_filters_dict: dict[str, bool]) -> list[str]:
+    """Transform dict of filters to list for pypandoc.
+
+    `pandoc_filters_dict` should take format `{"filter": <bool>}`.
+
+    If <bool> is `True` the filter will be returned.
+    If <bool> is `False` the filter will be suppressed.
+
+    Args:
+        pandoc_filters_dict: dictionary of filter names and booleans.
+
+    Returns:
+        filters as list of strings.
+    """
+    return [key for key, value in pandoc_filters_dict.items() if value]

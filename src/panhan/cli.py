@@ -11,19 +11,20 @@ def get_parser() -> ArgumentParser:
     """Get CLI argument parser.
 
     Returns:
-        ArgumentParser: argument parser.
+        argument parser.
     """
-    parser = ArgumentParser(prog="panhan")
-    parser.add_argument("SOURCE", nargs="*", help="markdown source file(s)")
-    parser.add_argument("--panhan-yaml", help="path to panhan.yaml")
-    parser.add_argument(
-        "--print-yaml-template",
-        action="store_true",
-        help="print panhan config template",
-    )
-    parser.add_argument(
-        "--verbose", action="store_true", help="explain what is being done"
-    )
+    description = """
+    Panhan is a preset handler for pandoc that allows you to define and use 
+    presets for different types of documents.
+    See https://github.com/domvwt/panhan for more information.
+    """
+    parser = ArgumentParser(prog="panhan", description=description)
+    parser.add_argument("SOURCE", nargs="*", help="markdown source file(s) to process")
+    parser.add_argument("--config", help="path to panhan.yaml")
+    parser.add_argument("--preset", help="name of preset to use; overrides document config")
+    parser.add_argument("--output", help="output path; only used if --preset is specified")
+    parser.add_argument("--config-template", action="store_true", help="print panhan config template and exit")
+    parser.add_argument("--verbose", action="store_true", help="print verbose output")
     parser.add_argument("--debug", action="store_true", help="print debug output")
     parser.add_argument("--version", action="version", version=__version__)
     return parser
@@ -46,7 +47,7 @@ def cli() -> None:
         return
 
     # Print YAML template and quit.
-    if args.print_yaml_template:
+    if args.config_template:
         commands.print_panhan_yaml_template()
         return
 
